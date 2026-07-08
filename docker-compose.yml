@@ -1,0 +1,99 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mc-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: minecraft_manager
+      MYSQL_USER: mcuser
+      MYSQL_PASSWORD: mcpass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: mc-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minecraft:
+    build: ./minecraft-server
+    container_name: mc-minecraft
+    restart: unless-stopped
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      MEMORY: 4G
+    volumes:
+      - ./minecraft-server/world:/minecraft/world
+      - ./minecraft-server/mods:/minecraft/mods
+      - ./minecraft-server/logs:/minecraft/logs
+      - ./minecraft-server/server.properties:/minecraft/server.properties
+      - ./minecraft-server/eula.txt:/minecraft/eula.txt
+      - ./minecraft-server/ops.json:/minecraft/ops.json
+      - ./minecraft-server/banned-players.json:/minecraft/banned-players.json
+      - ./minecraft-server/banned-ips.json:/minecraft/banned-ips.json
+      - ./minecraft-server/whitelist.json:/minecraft/whitelist.json
+
+  backend:
+    build: ./backend
+    container_name: mc-backend
+    restart: unless-stopped
+    expose:
+      - "8080"
+    env_file:
+      - ./backend/.env
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: mcuser
+      DB_PASSWORD: mcpass123
+      DB_NAME: minecraft_manager
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      RCON_HOST: minecraft
+      LOG_PATH: /minecraft/logs/latest.log
+    volumes:
+      - ./minecraft-server/logs:/minecraft/logs:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minecraft:
+        condition: service_started
+
+  frontend:
+    build: ./frontend
+    container_name: mc-frontend
+    restart: unless-stopped
+    ports:
+      - "9001:80"
+    environment:
+      BACKEND_HOST: backend:8080
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  redis_data:

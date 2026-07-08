@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Backend",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/backend",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "dlvFlags": ["--check-go-version=false"],
+      "showLog": true
+    },
+    {
+      "name": "Debug Backend Docker",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/backend",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "preLaunchTask": "docker: up dependencies",
+      "dlvFlags": ["--check-go-version=false"],
+      "showLog": true
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+world/
+logs/
+cache/
+crash-reports/
+fabricloader.log
+*.log
+.git/
+.gitignore
