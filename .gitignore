@@ -23,7 +23,6 @@ minecraft-server/banned-players.json
 minecraft-server/banned-ips.json
 minecraft-server/whitelist.json
 minecraft-server/usercache.json
-minecraft-server/server.properties
 
 # OS & IDE
 .DS_Store
